@@ -12,6 +12,7 @@ build/
 # IDE/editor state
 .idea/
 *.iml
+.superpowers/
 
 # Xcode user-specific state
 *.xcuserstate

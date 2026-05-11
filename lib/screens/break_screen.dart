@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../models/activity_type.dart';
 import '../state/reset_app_state.dart';
+import '../theme/reset_theme.dart';
 import '../widgets/countdown_ring.dart';
 import '../widgets/gradient_action_button.dart';
+import '../widgets/reset_panel.dart';
 
 class BreakScreen extends StatefulWidget {
   const BreakScreen({
@@ -85,100 +87,73 @@ class _BreakScreenState extends State<BreakScreen> {
         ),
         leadingWidth: 88,
       ),
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFAF4FF), Color(0xFFF7FBFF)],
-          ),
-        ),
+      body: DecoratedBox(
+        decoration: ResetDecorations.screen(),
         child: SafeArea(
           top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Spacer(),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.deepPurple.withValues(alpha: 0.10),
-                  ),
-                  child: SizedBox.square(
-                    dimension: 116,
-                    child: Center(
-                      child: Text(
-                        _activity.type.icon,
-                        style: const TextStyle(fontSize: 56),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxHeight < 650;
+
+              return SingleChildScrollView(
+                physics: compact
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: compact ? 10 : 24),
+                      _ActivityHeader(activity: _activity),
+                      SizedBox(height: compact ? 18 : 24),
+                      Opacity(
+                        opacity: _isRunning || _isComplete ? 1 : 0.42,
+                        child: CountdownRing(
+                          key: const ValueKey('break-countdown-ring'),
+                          size: compact ? 160 : 178,
+                          progress: totalSeconds == 0
+                              ? 1
+                              : 1 - (_timeRemaining / totalSeconds),
+                          label: _formatTime(_timeRemaining),
+                          caption: 'break timer',
+                        ),
                       ),
-                    ),
+                      SizedBox(height: compact ? 18 : 26),
+                      if (_isComplete)
+                        GradientActionButton(
+                          key: const ValueKey('break-primary-action'),
+                          label: 'Complete!',
+                          semanticLabel: 'Complete break',
+                          icon: Icons.check_circle_rounded,
+                          colors: const [
+                            ResetColors.success,
+                            Color(0xFF16A3A6),
+                          ],
+                          onPressed: _completeBreak,
+                        )
+                      else ...[
+                        GradientActionButton(
+                          key: const ValueKey('break-primary-action'),
+                          label: _isRunning ? 'Timer Running' : 'Start Timer',
+                          semanticLabel: _isRunning
+                              ? 'Timer running'
+                              : 'Start break timer',
+                          icon: Icons.play_arrow_rounded,
+                          onPressed: _isRunning ? null : _startTimer,
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _skipBreak,
+                          child: const Text('Skip this break'),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 18),
-                Text(
-                  _activity.type.label,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.deepPurple,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.black.withValues(alpha: 0.05),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 16,
-                    ),
-                    child: Text(
-                      _activity.suggestion,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Opacity(
-                  opacity: _isRunning || _isComplete ? 1 : 0.36,
-                  child: CountdownRing(
-                    size: 170,
-                    progress: totalSeconds == 0
-                        ? 1
-                        : 1 - (_timeRemaining / totalSeconds),
-                    label: _formatTime(_timeRemaining),
-                    caption: 'break timer',
-                  ),
-                ),
-                const Spacer(),
-                if (_isComplete)
-                  GradientActionButton(
-                    label: 'Complete!',
-                    icon: Icons.check_circle_rounded,
-                    colors: const [Colors.green, Colors.teal],
-                    onPressed: _completeBreak,
-                  )
-                else ...[
-                  GradientActionButton(
-                    label: _isRunning ? 'Timer Running' : 'Start Timer',
-                    icon: Icons.play_arrow_rounded,
-                    onPressed: _isRunning ? null : _startTimer,
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _skipBreak,
-                    child: const Text('Skip this break'),
-                  ),
-                ],
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -189,5 +164,64 @@ class _BreakScreenState extends State<BreakScreen> {
     final minutes = seconds ~/ 60;
     final remainder = seconds % 60;
     return '$minutes:${remainder.toString().padLeft(2, '0')}';
+  }
+}
+
+class _ActivityHeader extends StatelessWidget {
+  const _ActivityHeader({required this.activity});
+
+  final ({ActivityType type, String suggestion}) activity;
+
+  @override
+  Widget build(BuildContext context) {
+    return ResetPanel(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      child: Column(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  ResetColors.primary.withValues(alpha: 0.18),
+                  ResetColors.primary.withValues(alpha: 0.06),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.72),
+                width: 1.2,
+              ),
+            ),
+            child: SizedBox.square(
+              dimension: 108,
+              child: Center(
+                child: Text(
+                  activity.type.icon,
+                  style: const TextStyle(fontSize: 52),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            activity.type.label,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: ResetColors.primaryDeep,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            activity.suggestion,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: ResetColors.ink,
+              fontWeight: FontWeight.w600,
+              height: 1.25,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

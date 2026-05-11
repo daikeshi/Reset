@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
@@ -6,6 +7,7 @@ import 'screens/stats_screen.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'state/reset_app_state.dart';
+import 'theme/reset_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,10 +31,60 @@ class ResetApp extends StatelessWidget {
     return MaterialApp(
       title: 'Reset',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme:
+            ColorScheme.fromSeed(
+              seedColor: ResetColors.primary,
+              brightness: Brightness.light,
+            ).copyWith(
+              primary: ResetColors.primary,
+              secondary: ResetColors.accentBlue,
+              surface: ResetColors.surface,
+              onSurface: ResetColors.ink,
+              onSurfaceVariant: ResetColors.muted,
+              outline: ResetColors.border,
+            ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF7F4FA),
+        scaffoldBackgroundColor: ResetColors.backgroundBottom,
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: ResetColors.ink,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: ResetColors.ink,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          height: 70,
+          elevation: 0,
+          backgroundColor: ResetColors.surface.withValues(alpha: 0.78),
+          indicatorColor: ResetColors.primary.withValues(alpha: 0.14),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final selected = states.contains(WidgetState.selected);
+            return TextStyle(
+              color: selected ? ResetColors.primaryDeep : ResetColors.muted,
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+            );
+          }),
+        ),
       ),
       home: ResetShell(appState: appState),
     );
@@ -66,30 +118,47 @@ class _ResetShellState extends State<ResetShell> {
     ];
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(index: _selectedIndex, children: screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        indicatorColor: Colors.deepPurple.withValues(alpha: 0.16),
-        onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: ResetColors.surface.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: ResetColors.border),
+              boxShadow: ResetShadows.panel,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: NavigationBar(
+                key: const ValueKey('reset-bottom-navigation'),
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (index) {
+                  setState(() => _selectedIndex = index);
+                },
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.bar_chart_outlined),
+                    selectedIcon: Icon(Icons.bar_chart),
+                    label: 'Stats',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings),
+                    label: 'Settings',
+                  ),
+                ],
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Stats',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+        ),
       ),
     );
   }

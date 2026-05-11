@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/user_settings.dart';
 import '../state/reset_app_state.dart';
+import '../theme/reset_theme.dart';
+import '../widgets/reset_panel.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -78,74 +80,146 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
         ],
       ),
-      body: ListView(
+      body: DecoratedBox(
+        decoration: ResetDecorations.screen(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+          children: [
+            _SettingsSection(
+              title: 'Reminders',
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Enable Notifications'),
+                  subtitle: settings.notificationsEnabled
+                      ? const Text('Break reminders are scheduled')
+                      : const Text('Turn on reminders for healthy breaks'),
+                  value: settings.notificationsEnabled,
+                  onChanged: _isSaving ? null : _setNotificationsEnabled,
+                ),
+                const _TileDivider(),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Sound'),
+                  value: settings.soundEnabled,
+                  onChanged: !settings.notificationsEnabled || _isSaving
+                      ? null
+                      : (value) => _runSettingUpdate(
+                          () => widget.appState.setSoundEnabled(value),
+                        ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _SettingsSection(
+              title: 'Timing',
+              children: [
+                _DropdownTile<int>(
+                  title: 'Reminder Interval',
+                  value: settings.reminderIntervalMinutes,
+                  values: UserSettings.intervals,
+                  labelFor: (value) => '$value min',
+                  onChanged: _isSaving
+                      ? null
+                      : (value) => _runSettingUpdate(
+                          () => widget.appState.setReminderInterval(value),
+                        ),
+                ),
+                const _TileDivider(),
+                _DropdownTile<int>(
+                  title: 'Break Duration',
+                  value: settings.breakDurationMinutes,
+                  values: UserSettings.breakDurations,
+                  labelFor: (value) => '$value min',
+                  onChanged: _isSaving
+                      ? null
+                      : (value) => _runSettingUpdate(
+                          () => widget.appState.setBreakDuration(value),
+                        ),
+                ),
+                const _TileDivider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Quiet Hours'),
+                  subtitle: const Text('No reminders during these hours'),
+                  trailing: Text(
+                    '${settings.quietHoursStart} - ${settings.quietHoursEnd}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ResetColors.muted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _SettingsSection(
+              title: 'App',
+              children: [
+                const ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Version'),
+                  trailing: Text('1.0.0'),
+                ),
+                const _TileDivider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Rate Reset'),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: _openStore,
+                ),
+                const _TileDivider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Share App'),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: _openStore,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return ResetPanel(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SwitchListTile(
-            title: const Text('Enable Notifications'),
-            subtitle: settings.notificationsEnabled
-                ? const Text('Break reminders are scheduled')
-                : const Text('Turn on reminders for healthy breaks'),
-            value: settings.notificationsEnabled,
-            onChanged: _isSaving ? null : _setNotificationsEnabled,
-          ),
-          SwitchListTile(
-            title: const Text('Sound'),
-            value: settings.soundEnabled,
-            onChanged: !settings.notificationsEnabled || _isSaving
-                ? null
-                : (value) => _runSettingUpdate(
-                    () => widget.appState.setSoundEnabled(value),
-                  ),
-          ),
-          const Divider(height: 24),
-          _DropdownTile<int>(
-            title: 'Reminder Interval',
-            value: settings.reminderIntervalMinutes,
-            values: UserSettings.intervals,
-            labelFor: (value) => '$value min',
-            onChanged: _isSaving
-                ? null
-                : (value) => _runSettingUpdate(
-                    () => widget.appState.setReminderInterval(value),
-                  ),
-          ),
-          _DropdownTile<int>(
-            title: 'Break Duration',
-            value: settings.breakDurationMinutes,
-            values: UserSettings.breakDurations,
-            labelFor: (value) => '$value min',
-            onChanged: _isSaving
-                ? null
-                : (value) => _runSettingUpdate(
-                    () => widget.appState.setBreakDuration(value),
-                  ),
-          ),
-          const Divider(height: 24),
-          ListTile(
-            title: const Text('Quiet Hours'),
-            subtitle: const Text('No reminders during these hours'),
-            trailing: Text(
-              '${settings.quietHoursStart} - ${settings.quietHoursEnd}',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 4),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: ResetColors.primaryDeep,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          const Divider(height: 24),
-          const ListTile(title: Text('Version'), trailing: Text('1.0.0')),
-          ListTile(
-            title: const Text('Rate Reset'),
-            trailing: const Icon(Icons.open_in_new_rounded),
-            onTap: _openStore,
-          ),
-          ListTile(
-            title: const Text('Share App'),
-            trailing: const Icon(Icons.open_in_new_rounded),
-            onTap: _openStore,
-          ),
+          ...children,
         ],
       ),
     );
+  }
+}
+
+class _TileDivider extends StatelessWidget {
+  const _TileDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(height: 1, color: ResetColors.border);
   }
 }
 
@@ -167,21 +241,24 @@ class _DropdownTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      contentPadding: EdgeInsets.zero,
       title: Text(title),
-      trailing: DropdownButton<T>(
-        value: value,
-        underline: const SizedBox.shrink(),
-        items: [
-          for (final item in values)
-            DropdownMenuItem(value: item, child: Text(labelFor(item))),
-        ],
-        onChanged: onChanged == null
-            ? null
-            : (value) {
-                if (value != null) {
-                  onChanged!(value);
-                }
-              },
+      trailing: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          borderRadius: BorderRadius.circular(14),
+          items: [
+            for (final item in values)
+              DropdownMenuItem(value: item, child: Text(labelFor(item))),
+          ],
+          onChanged: onChanged == null
+              ? null
+              : (value) {
+                  if (value != null) {
+                    onChanged!(value);
+                  }
+                },
+        ),
       ),
     );
   }

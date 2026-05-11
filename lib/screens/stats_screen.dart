@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../models/activity_type.dart';
 import '../state/reset_app_state.dart';
+import '../theme/reset_theme.dart';
+import '../widgets/reset_panel.dart';
 import '../widgets/stat_card.dart';
 
 class StatsScreen extends StatelessWidget {
@@ -14,39 +16,42 @@ class StatsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Stats')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  title: 'Today',
-                  value: appState.breaksToday.toString(),
-                  subtitle: 'breaks',
-                  icon: Icons.wb_sunny_rounded,
-                  color: Colors.orange,
+      body: DecoratedBox(
+        decoration: ResetDecorations.screen(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    title: 'Today',
+                    value: appState.breaksToday.toString(),
+                    subtitle: 'breaks',
+                    icon: Icons.wb_sunny_rounded,
+                    color: ResetColors.warmAccent,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: StatCard(
-                  title: 'This Week',
-                  value: appState.breaksThisWeek.toString(),
-                  subtitle: 'breaks',
-                  icon: Icons.calendar_month_rounded,
-                  color: Colors.blue,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatCard(
+                    title: 'This Week',
+                    value: appState.breaksThisWeek.toString(),
+                    subtitle: 'breaks',
+                    icon: Icons.calendar_month_rounded,
+                    color: ResetColors.accentBlue,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          _StreakCard(streak: appState.currentStreak),
-          const SizedBox(height: 18),
-          _TotalCard(appState: appState),
-          const SizedBox(height: 18),
-          _ActivityChart(breakdown: appState.activityBreakdown),
-        ],
+              ],
+            ),
+            const SizedBox(height: 18),
+            _StreakCard(streak: appState.currentStreak),
+            const SizedBox(height: 18),
+            _TotalCard(appState: appState),
+            const SizedBox(height: 18),
+            _ActivityChart(breakdown: appState.activityBreakdown),
+          ],
+        ),
       ),
     );
   }
@@ -66,7 +71,7 @@ class _StreakCard extends StatelessWidget {
             children: [
               const Icon(
                 Icons.local_fire_department,
-                color: Colors.orange,
+                color: ResetColors.warmAccent,
                 size: 34,
               ),
               const SizedBox(width: 12),
@@ -76,13 +81,15 @@ class _StreakCard extends StatelessWidget {
                   Text(
                     streak.toString(),
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      color: ResetColors.ink,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                   Text(
                     'day streak',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: ResetColors.muted,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -94,14 +101,15 @@ class _StreakCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.info_outline_rounded,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: ResetColors.muted,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Text(
                 'Maintain 3+ breaks per day',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: ResetColors.muted,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -148,14 +156,16 @@ class _TotalMetric extends StatelessWidget {
       children: [
         Text(
           value.toString(),
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: ResetColors.ink,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: ResetColors.muted,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -181,9 +191,10 @@ class _ActivityChart extends StatelessWidget {
         children: [
           Text(
             'Activity Breakdown',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: ResetColors.ink,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 16),
           if (entries.isEmpty)
@@ -196,17 +207,21 @@ class _ActivityChart extends StatelessWidget {
                     Icon(
                       Icons.bar_chart_rounded,
                       size: 44,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: ResetColors.muted,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'No data yet',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: ResetColors.ink,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     Text(
                       'Complete your first break to see stats',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: ResetColors.muted,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -219,8 +234,13 @@ class _ActivityChart extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
+                  barTouchData: BarTouchData(enabled: false),
                   borderData: FlBorderData(show: false),
-                  gridData: const FlGridData(drawVerticalLine: false),
+                  gridData: FlGridData(
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) =>
+                        FlLine(color: ResetColors.border, strokeWidth: 1),
+                  ),
                   titlesData: FlTitlesData(
                     topTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
@@ -228,15 +248,23 @@ class _ActivityChart extends StatelessWidget {
                     rightTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
                     ),
-                    leftTitles: const AxisTitles(
+                    leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 28,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            value.toInt().toString(),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: ResetColors.muted),
+                          );
+                        },
                       ),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 42,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
                           if (index < 0 || index >= entries.length) {
@@ -244,9 +272,19 @@ class _ActivityChart extends StatelessWidget {
                           }
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              entries[index].key.label,
-                              style: Theme.of(context).textTheme.labelSmall,
+                            child: SizedBox(
+                              width: 58,
+                              child: Text(
+                                entries[index].key.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: ResetColors.muted,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
                             ),
                           );
                         },
@@ -278,17 +316,17 @@ class _ActivityChart extends StatelessWidget {
   Color _colorFor(ActivityType type) {
     switch (type) {
       case ActivityType.stretch:
-        return Colors.deepPurple;
+        return ResetColors.primary;
       case ActivityType.walk:
-        return Colors.blue;
+        return ResetColors.accentBlue;
       case ActivityType.eyes:
-        return Colors.green;
+        return ResetColors.success;
       case ActivityType.hydrate:
-        return Colors.cyan;
+        return const Color(0xFF16A3D8);
       case ActivityType.workout:
-        return Colors.orange;
+        return ResetColors.warmAccent;
       case ActivityType.meditation:
-        return Colors.pink;
+        return const Color(0xFFB75CE5);
     }
   }
 }
@@ -300,13 +338,6 @@ class _Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.80),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-      ),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
-    );
+    return ResetPanel(padding: const EdgeInsets.all(16), child: child);
   }
 }

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../screens/break_screen.dart';
 import '../state/reset_app_state.dart';
+import '../theme/reset_theme.dart';
 import '../widgets/countdown_ring.dart';
 import '../widgets/gradient_action_button.dart';
+import '../widgets/reset_panel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -89,38 +91,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF4ECFF), Color(0xFFF7FBFF)],
-        ),
-      ),
+    return DecoratedBox(
+      decoration: ResetDecorations.screen(),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              _Header(appState: widget.appState),
-              const Spacer(),
-              CountdownRing(
-                progress: _progress,
-                label: _timeRemaining,
-                caption: 'until break',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxHeight < 670;
+            final ringSize = compact ? 206.0 : 236.0;
+
+            return SingleChildScrollView(
+              physics: compact
+                  ? const BouncingScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Header(appState: widget.appState),
+                    SizedBox(height: compact ? 22 : 34),
+                    CountdownRing(
+                      progress: _progress,
+                      label: _timeRemaining,
+                      caption: 'until break',
+                      size: ringSize,
+                    ),
+                    SizedBox(height: compact ? 18 : 24),
+                    _HomeSummary(appState: widget.appState),
+                    SizedBox(height: compact ? 18 : 28),
+                    GradientActionButton(
+                      key: const ValueKey('home-primary-action'),
+                      label: 'Take Break Now',
+                      semanticLabel: 'Take a break now',
+                      icon: Icons.play_arrow_rounded,
+                      onPressed: _openBreak,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 26),
-              _StreakBadge(streak: widget.appState.currentStreak),
-              const SizedBox(height: 24),
-              _HomeTotals(appState: widget.appState),
-              const Spacer(),
-              GradientActionButton(
-                label: 'Take Break Now',
-                icon: Icons.play_arrow_rounded,
-                onPressed: _openBreak,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -149,51 +160,65 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Reset',
-          style: Theme.of(
-            context,
-          ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const Spacer(),
-        if (!appState.settings.notificationsEnabled)
-          Chip(
-            avatar: const Icon(Icons.notifications_off_outlined, size: 18),
-            label: const Text('Alerts off'),
-            side: BorderSide.none,
-            backgroundColor: Colors.white.withValues(alpha: 0.72),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Reset',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: ResetColors.ink,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'A calm rhythm for your workday',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ResetColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
+        ),
+        if (!appState.settings.notificationsEnabled) const _AlertChip(),
       ],
     );
   }
 }
 
-class _StreakBadge extends StatelessWidget {
-  const _StreakBadge({required this.streak});
-
-  final int streak;
+class _AlertChip extends StatelessWidget {
+  const _AlertChip();
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
+        color: Colors.white.withValues(alpha: 0.74),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: ResetColors.border),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.local_fire_department, color: Colors.orange),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 17,
+              color: ResetColors.muted,
+            ),
+            const SizedBox(width: 6),
             Text(
-              '$streak day streak',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              'Alerts off',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: ResetColors.muted,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),
@@ -202,68 +227,106 @@ class _StreakBadge extends StatelessWidget {
   }
 }
 
-class _HomeTotals extends StatelessWidget {
-  const _HomeTotals({required this.appState});
+class _HomeSummary extends StatelessWidget {
+  const _HomeSummary({required this.appState});
 
   final ResetAppState appState;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _TotalValue(
+    return ResetPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SummaryMetric(
+              value: appState.currentStreak.toString(),
+              label: 'day streak',
+              icon: Icons.local_fire_department_rounded,
+              color: ResetColors.warmAccent,
+            ),
+          ),
+          const _SummaryDivider(),
+          Expanded(
+            child: _SummaryMetric(
               value: appState.breaksToday.toString(),
               label: 'breaks today',
+              icon: Icons.wb_sunny_rounded,
+              color: ResetColors.primary,
             ),
-            Container(
-              width: 1,
-              height: 42,
-              margin: const EdgeInsets.symmetric(horizontal: 28),
-              color: Colors.black.withValues(alpha: 0.12),
-            ),
-            _TotalValue(
+          ),
+          const _SummaryDivider(),
+          Expanded(
+            child: _SummaryMetric(
               value: appState.totalMinutes.toString(),
               label: 'mins moved',
+              icon: Icons.directions_walk_rounded,
+              color: ResetColors.accentBlue,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TotalValue extends StatelessWidget {
-  const _TotalValue({required this.value, required this.label});
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
 
   final String value;
   final String label;
+  final IconData icon;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        DecoratedBox(
+          decoration: ResetDecorations.iconSurface(color),
+          child: SizedBox.square(
+            dimension: 34,
+            child: Icon(icon, size: 19, color: color),
+          ),
+        ),
+        const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: ResetColors.ink,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         Text(
           label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: ResetColors.muted,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SummaryDivider extends StatelessWidget {
+  const _SummaryDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 72,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      color: ResetColors.border,
     );
   }
 }
