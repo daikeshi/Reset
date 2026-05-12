@@ -46,7 +46,55 @@ void main() {
 
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text('Reminder Interval'), findsOneWidget);
+    expect(find.text('Focus Time'), findsOneWidget);
+  });
+
+  testWidgets('settings can adjust focus time in one minute increments', (
+    tester,
+  ) async {
+    final state = ResetAppState.test(
+      now: () => DateTime(2026, 5, 10, 12),
+      settings: const UserSettings(notificationsEnabled: false),
+    );
+
+    await tester.pumpWidget(ResetApp(appState: state));
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Focus Time'), findsOneWidget);
+    expect(state.settings.reminderIntervalMinutes, 60);
+
+    await tester.tap(find.byKey(const ValueKey('focus-time-decrement')));
+    await tester.pumpAndSettle();
+    expect(state.settings.reminderIntervalMinutes, 59);
+
+    await tester.tap(find.byKey(const ValueKey('focus-time-increment')));
+    await tester.pumpAndSettle();
+    expect(state.settings.reminderIntervalMinutes, 60);
+  });
+
+  testWidgets('settings can adjust break duration in one minute increments', (
+    tester,
+  ) async {
+    final state = ResetAppState.test(
+      now: () => DateTime(2026, 5, 10, 12),
+      settings: const UserSettings(notificationsEnabled: false),
+    );
+
+    await tester.pumpWidget(ResetApp(appState: state));
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Break Duration'), findsOneWidget);
+    expect(state.settings.breakDurationMinutes, 5);
+
+    await tester.tap(find.byKey(const ValueKey('break-duration-decrement')));
+    await tester.pumpAndSettle();
+    expect(state.settings.breakDurationMinutes, 4);
+
+    await tester.tap(find.byKey(const ValueKey('break-duration-increment')));
+    await tester.pumpAndSettle();
+    expect(state.settings.breakDurationMinutes, 5);
   });
 
   testWidgets('polished break flow opens without changing behavior', (

@@ -15,8 +15,10 @@ class UserSettings {
   final bool notificationsEnabled;
   final bool soundEnabled;
 
-  static const intervals = [30, 45, 60, 90, 120];
-  static const breakDurations = [1, 3, 5, 10];
+  static const minReminderIntervalMinutes = 30;
+  static const maxReminderIntervalMinutes = 120;
+  static const minBreakDurationMinutes = 1;
+  static const maxBreakDurationMinutes = 10;
 
   UserSettings copyWith({
     int? reminderIntervalMinutes,

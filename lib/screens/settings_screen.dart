@@ -114,11 +114,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsSection(
               title: 'Timing',
               children: [
-                _DropdownTile<int>(
-                  title: 'Reminder Interval',
+                _MinuteStepperTile(
+                  title: 'Focus Time',
                   value: settings.reminderIntervalMinutes,
-                  values: UserSettings.intervals,
-                  labelFor: (value) => '$value min',
+                  minValue: UserSettings.minReminderIntervalMinutes,
+                  maxValue: UserSettings.maxReminderIntervalMinutes,
+                  decrementKey: const ValueKey('focus-time-decrement'),
+                  incrementKey: const ValueKey('focus-time-increment'),
                   onChanged: _isSaving
                       ? null
                       : (value) => _runSettingUpdate(
@@ -126,11 +128,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                 ),
                 const _TileDivider(),
-                _DropdownTile<int>(
+                _MinuteStepperTile(
                   title: 'Break Duration',
                   value: settings.breakDurationMinutes,
-                  values: UserSettings.breakDurations,
-                  labelFor: (value) => '$value min',
+                  minValue: UserSettings.minBreakDurationMinutes,
+                  maxValue: UserSettings.maxBreakDurationMinutes,
+                  decrementKey: const ValueKey('break-duration-decrement'),
+                  incrementKey: const ValueKey('break-duration-increment'),
                   onChanged: _isSaving
                       ? null
                       : (value) => _runSettingUpdate(
@@ -223,42 +227,62 @@ class _TileDivider extends StatelessWidget {
   }
 }
 
-class _DropdownTile<T> extends StatelessWidget {
-  const _DropdownTile({
+class _MinuteStepperTile extends StatelessWidget {
+  const _MinuteStepperTile({
     required this.title,
     required this.value,
-    required this.values,
-    required this.labelFor,
+    required this.minValue,
+    required this.maxValue,
+    required this.decrementKey,
+    required this.incrementKey,
     required this.onChanged,
   });
 
   final String title;
-  final T value;
-  final List<T> values;
-  final String Function(T value) labelFor;
-  final ValueChanged<T>? onChanged;
+  final int value;
+  final int minValue;
+  final int maxValue;
+  final Key decrementKey;
+  final Key incrementKey;
+  final ValueChanged<int>? onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final canDecrement = onChanged != null && value > minValue;
+    final canIncrement = onChanged != null && value < maxValue;
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(title),
-      trailing: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          borderRadius: BorderRadius.circular(14),
-          items: [
-            for (final item in values)
-              DropdownMenuItem(value: item, child: Text(labelFor(item))),
-          ],
-          onChanged: onChanged == null
-              ? null
-              : (value) {
-                  if (value != null) {
-                    onChanged!(value);
-                  }
-                },
-        ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            key: decrementKey,
+            tooltip: 'Decrease $title',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.remove_rounded),
+            onPressed: canDecrement ? () => onChanged!(value - 1) : null,
+          ),
+          SizedBox(
+            width: 62,
+            child: Text(
+              '$value min',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: ResetColors.ink,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          IconButton(
+            key: incrementKey,
+            tooltip: 'Increase $title',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.add_rounded),
+            onPressed: canIncrement ? () => onChanged!(value + 1) : null,
+          ),
+        ],
       ),
     );
   }
