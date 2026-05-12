@@ -117,49 +117,100 @@ class _ResetShellState extends State<ResetShell> {
       SettingsScreen(appState: widget.appState, onChanged: _refresh),
     ];
 
-    return Scaffold(
-      extendBody: true,
-      body: IndexedStack(index: _selectedIndex, children: screens),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: ResetColors.surface.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: ResetColors.border),
-              boxShadow: ResetShadows.panel,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useNavigationRail = constraints.maxWidth >= 720;
+        final body = IndexedStack(index: _selectedIndex, children: screens);
+
+        if (useNavigationRail) {
+          return Scaffold(
+            body: Row(
+              children: [
+                SafeArea(
+                  child: NavigationRail(
+                    key: const ValueKey('reset-navigation-rail'),
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: (index) {
+                      setState(() => _selectedIndex = index);
+                    },
+                    backgroundColor: ResetColors.surface.withValues(alpha: 0.78),
+                    indicatorColor: ResetColors.primary.withValues(alpha: 0.14),
+                    groupAlignment: -0.76,
+                    labelType: NavigationRailLabelType.all,
+                    destinations: const [
+                      NavigationRailDestination(
+                        icon: Icon(Icons.home_outlined),
+                        selectedIcon: Icon(Icons.home),
+                        label: Text('Home'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.bar_chart_outlined),
+                        selectedIcon: Icon(Icons.bar_chart),
+                        label: Text('Stats'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.settings_outlined),
+                        selectedIcon: Icon(Icons.settings),
+                        label: Text('Settings'),
+                      ),
+                    ],
+                  ),
+                ),
+                const VerticalDivider(width: 1, color: ResetColors.border),
+                Expanded(child: body),
+              ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: NavigationBar(
-                key: const ValueKey('reset-bottom-navigation'),
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) {
-                  setState(() => _selectedIndex = index);
-                },
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home),
-                    label: 'Home',
+          );
+        }
+
+        return Scaffold(
+          extendBody: true,
+          body: body,
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: ResetColors.surface.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: ResetColors.border),
+                  boxShadow: ResetShadows.panel,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: NavigationBar(
+                      key: const ValueKey('reset-bottom-navigation'),
+                      selectedIndex: _selectedIndex,
+                      onDestinationSelected: (index) {
+                        setState(() => _selectedIndex = index);
+                      },
+                      destinations: const [
+                        NavigationDestination(
+                          icon: Icon(Icons.home_outlined),
+                          selectedIcon: Icon(Icons.home),
+                          label: 'Home',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.bar_chart_outlined),
+                          selectedIcon: Icon(Icons.bar_chart),
+                          label: 'Stats',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.settings_outlined),
+                          selectedIcon: Icon(Icons.settings),
+                          label: 'Settings',
+                        ),
+                      ],
+                    ),
                   ),
-                  NavigationDestination(
-                    icon: Icon(Icons.bar_chart_outlined),
-                    selectedIcon: Icon(Icons.bar_chart),
-                    label: 'Stats',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.settings_outlined),
-                    selectedIcon: Icon(Icons.settings),
-                    label: 'Settings',
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

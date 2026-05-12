@@ -8,7 +8,15 @@ import 'package:reset/state/reset_app_state.dart';
 import 'package:reset/widgets/countdown_ring.dart';
 
 void main() {
+  void setSurfaceSize(WidgetTester tester, Size size) {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = size;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
   testWidgets('polished shell renders home stats and settings', (tester) async {
+    setSurfaceSize(tester, const Size(390, 844));
     final now = DateTime(2026, 5, 10, 12);
     final state = ResetAppState.test(
       now: () => now,
@@ -37,6 +45,20 @@ void main() {
     expect(
       find.byKey(const ValueKey('reset-bottom-navigation')),
       findsOneWidget,
+    );
+    expect(
+      tester
+          .getRect(find.byKey(const ValueKey('reset-bottom-navigation')))
+          .right,
+      lessThanOrEqualTo(390),
+    );
+    expect(
+      tester.getRect(find.byKey(const ValueKey('home-primary-action'))).right,
+      lessThanOrEqualTo(390),
+    );
+    expect(
+      tester.getRect(find.text('mins moved')).right,
+      lessThanOrEqualTo(390),
     );
     expect(find.text('Reset'), findsOneWidget);
 
@@ -140,5 +162,31 @@ void main() {
     expect(find.byKey(const ValueKey('break-countdown-ring')), findsOneWidget);
     expect(find.byKey(const ValueKey('break-primary-action')), findsOneWidget);
     expect(state.totalBreaks, 0);
+  });
+
+  testWidgets('shell adapts navigation for phone tablet and desktop widths', (
+    tester,
+  ) async {
+    Future<void> pumpAt(Size size) async {
+      setSurfaceSize(tester, size);
+      final state = ResetAppState.test(
+        now: () => DateTime(2026, 5, 10, 12),
+        settings: const UserSettings(notificationsEnabled: false),
+      );
+      await tester.pumpWidget(ResetApp(appState: state));
+      await tester.pumpAndSettle();
+    }
+
+    await pumpAt(const Size(390, 844));
+    expect(find.byKey(const ValueKey('reset-bottom-navigation')), findsOneWidget);
+    expect(find.byKey(const ValueKey('reset-navigation-rail')), findsNothing);
+
+    await pumpAt(const Size(834, 1194));
+    expect(find.byKey(const ValueKey('reset-navigation-rail')), findsOneWidget);
+    expect(find.byKey(const ValueKey('reset-bottom-navigation')), findsNothing);
+
+    await pumpAt(const Size(1440, 900));
+    expect(find.byKey(const ValueKey('reset-navigation-rail')), findsOneWidget);
+    expect(find.byKey(const ValueKey('reset-bottom-navigation')), findsNothing);
   });
 }

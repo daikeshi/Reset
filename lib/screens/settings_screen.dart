@@ -83,108 +83,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: DecoratedBox(
         decoration: ResetDecorations.screen(),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          children: [
-            _SettingsSection(
-              title: 'Reminders',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxContentWidth = constraints.maxWidth >= 900
+                ? 760.0
+                : double.infinity;
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
               children: [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Enable Notifications'),
-                  subtitle: settings.notificationsEnabled
-                      ? const Text('Break reminders are scheduled')
-                      : const Text('Turn on reminders for healthy breaks'),
-                  value: settings.notificationsEnabled,
-                  onChanged: _isSaving ? null : _setNotificationsEnabled,
-                ),
-                const _TileDivider(),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Sound'),
-                  value: settings.soundEnabled,
-                  onChanged: !settings.notificationsEnabled || _isSaving
-                      ? null
-                      : (value) => _runSettingUpdate(
-                          () => widget.appState.setSoundEnabled(value),
+                Center(
+                  child: SizedBox(
+                    width: maxContentWidth,
+                    child: Column(
+                      children: [
+                        _SettingsSection(
+                          title: 'Reminders',
+                          children: [
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Enable Notifications'),
+                              subtitle: settings.notificationsEnabled
+                                  ? const Text('Break reminders are scheduled')
+                                  : const Text(
+                                      'Turn on reminders for healthy breaks',
+                                    ),
+                              value: settings.notificationsEnabled,
+                              onChanged: _isSaving
+                                  ? null
+                                  : _setNotificationsEnabled,
+                            ),
+                            const _TileDivider(),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Sound'),
+                              value: settings.soundEnabled,
+                              onChanged:
+                                  !settings.notificationsEnabled || _isSaving
+                                  ? null
+                                  : (value) => _runSettingUpdate(
+                                      () => widget.appState.setSoundEnabled(
+                                        value,
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _SettingsSection(
-              title: 'Timing',
-              children: [
-                _MinuteStepperTile(
-                  title: 'Focus Time',
-                  value: settings.reminderIntervalMinutes,
-                  minValue: UserSettings.minReminderIntervalMinutes,
-                  maxValue: UserSettings.maxReminderIntervalMinutes,
-                  decrementKey: const ValueKey('focus-time-decrement'),
-                  incrementKey: const ValueKey('focus-time-increment'),
-                  inputKey: const ValueKey('focus-time-input'),
-                  onChanged: _isSaving
-                      ? null
-                      : (value) => _runSettingUpdate(
-                          () => widget.appState.setReminderInterval(value),
+                        const SizedBox(height: 16),
+                        _SettingsSection(
+                          title: 'Timing',
+                          children: [
+                            _MinuteStepperTile(
+                              title: 'Focus Time',
+                              value: settings.reminderIntervalMinutes,
+                              minValue:
+                                  UserSettings.minReminderIntervalMinutes,
+                              maxValue:
+                                  UserSettings.maxReminderIntervalMinutes,
+                              decrementKey: const ValueKey(
+                                'focus-time-decrement',
+                              ),
+                              incrementKey: const ValueKey(
+                                'focus-time-increment',
+                              ),
+                              inputKey: const ValueKey('focus-time-input'),
+                              onChanged: _isSaving
+                                  ? null
+                                  : (value) => _runSettingUpdate(
+                                      () => widget.appState
+                                          .setReminderInterval(value),
+                                    ),
+                            ),
+                            const _TileDivider(),
+                            _MinuteStepperTile(
+                              title: 'Break Duration',
+                              value: settings.breakDurationMinutes,
+                              minValue: UserSettings.minBreakDurationMinutes,
+                              maxValue: UserSettings.maxBreakDurationMinutes,
+                              decrementKey: const ValueKey(
+                                'break-duration-decrement',
+                              ),
+                              incrementKey: const ValueKey(
+                                'break-duration-increment',
+                              ),
+                              inputKey: const ValueKey(
+                                'break-duration-input',
+                              ),
+                              onChanged: _isSaving
+                                  ? null
+                                  : (value) => _runSettingUpdate(
+                                      () => widget.appState.setBreakDuration(
+                                        value,
+                                      ),
+                                    ),
+                            ),
+                            const _TileDivider(),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Quiet Hours'),
+                              subtitle: const Text(
+                                'No reminders during these hours',
+                              ),
+                              trailing: Text(
+                                '${settings.quietHoursStart} - '
+                                '${settings.quietHoursEnd}',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: ResetColors.muted,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
-                ),
-                const _TileDivider(),
-                _MinuteStepperTile(
-                  title: 'Break Duration',
-                  value: settings.breakDurationMinutes,
-                  minValue: UserSettings.minBreakDurationMinutes,
-                  maxValue: UserSettings.maxBreakDurationMinutes,
-                  decrementKey: const ValueKey('break-duration-decrement'),
-                  incrementKey: const ValueKey('break-duration-increment'),
-                  inputKey: const ValueKey('break-duration-input'),
-                  onChanged: _isSaving
-                      ? null
-                      : (value) => _runSettingUpdate(
-                          () => widget.appState.setBreakDuration(value),
+                        const SizedBox(height: 16),
+                        _SettingsSection(
+                          title: 'App',
+                          children: [
+                            const ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text('Version'),
+                              trailing: Text('1.0.0'),
+                            ),
+                            const _TileDivider(),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Rate Reset'),
+                              trailing: const Icon(Icons.open_in_new_rounded),
+                              onTap: _openStore,
+                            ),
+                            const _TileDivider(),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Share App'),
+                              trailing: const Icon(Icons.open_in_new_rounded),
+                              onTap: _openStore,
+                            ),
+                          ],
                         ),
-                ),
-                const _TileDivider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Quiet Hours'),
-                  subtitle: const Text('No reminders during these hours'),
-                  trailing: Text(
-                    '${settings.quietHoursStart} - ${settings.quietHoursEnd}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: ResetColors.muted,
-                      fontWeight: FontWeight.w700,
+                      ],
                     ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            _SettingsSection(
-              title: 'App',
-              children: [
-                const ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Version'),
-                  trailing: Text('1.0.0'),
-                ),
-                const _TileDivider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Rate Reset'),
-                  trailing: const Icon(Icons.open_in_new_rounded),
-                  onTap: _openStore,
-                ),
-                const _TileDivider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Share App'),
-                  trailing: const Icon(Icons.open_in_new_rounded),
-                  onTap: _openStore,
-                ),
-              ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

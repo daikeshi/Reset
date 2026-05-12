@@ -94,62 +94,74 @@ class _BreakScreenState extends State<BreakScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final compact = constraints.maxHeight < 650;
+              final maxContentWidth = constraints.maxWidth >= 720
+                  ? 560.0
+                  : double.infinity;
 
               return SingleChildScrollView(
                 physics: compact
                     ? const BouncingScrollPhysics()
                     : const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: compact ? 10 : 24),
-                      _ActivityHeader(activity: _activity),
-                      SizedBox(height: compact ? 18 : 24),
-                      Opacity(
-                        opacity: _isRunning || _isComplete ? 1 : 0.42,
-                        child: CountdownRing(
-                          key: const ValueKey('break-countdown-ring'),
-                          size: compact ? 160 : 178,
-                          progress: totalSeconds == 0
-                              ? 1
-                              : 1 - (_timeRemaining / totalSeconds),
-                          label: _formatTime(_timeRemaining),
-                          caption: 'break timer',
-                        ),
+                child: Center(
+                  child: SizedBox(
+                    width: maxContentWidth,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                      SizedBox(height: compact ? 18 : 26),
-                      if (_isComplete)
-                        GradientActionButton(
-                          key: const ValueKey('break-primary-action'),
-                          label: 'Complete!',
-                          semanticLabel: 'Complete break',
-                          icon: Icons.check_circle_rounded,
-                          colors: const [
-                            ResetColors.success,
-                            Color(0xFF16A3A6),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: compact ? 10 : 24),
+                          _ActivityHeader(activity: _activity),
+                          SizedBox(height: compact ? 18 : 24),
+                          Opacity(
+                            opacity: _isRunning || _isComplete ? 1 : 0.42,
+                            child: CountdownRing(
+                              key: const ValueKey('break-countdown-ring'),
+                              size: compact ? 160 : 178,
+                              progress: totalSeconds == 0
+                                  ? 1
+                                  : 1 - (_timeRemaining / totalSeconds),
+                              label: _formatTime(_timeRemaining),
+                              caption: 'break timer',
+                            ),
+                          ),
+                          SizedBox(height: compact ? 18 : 26),
+                          if (_isComplete)
+                            GradientActionButton(
+                              key: const ValueKey('break-primary-action'),
+                              label: 'Complete!',
+                              semanticLabel: 'Complete break',
+                              icon: Icons.check_circle_rounded,
+                              colors: const [
+                                ResetColors.success,
+                                Color(0xFF16A3A6),
+                              ],
+                              onPressed: _completeBreak,
+                            )
+                          else ...[
+                            GradientActionButton(
+                              key: const ValueKey('break-primary-action'),
+                              label: _isRunning
+                                  ? 'Timer Running'
+                                  : 'Start Timer',
+                              semanticLabel: _isRunning
+                                  ? 'Timer running'
+                                  : 'Start break timer',
+                              icon: Icons.play_arrow_rounded,
+                              onPressed: _isRunning ? null : _startTimer,
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: _skipBreak,
+                              child: const Text('Skip this break'),
+                            ),
                           ],
-                          onPressed: _completeBreak,
-                        )
-                      else ...[
-                        GradientActionButton(
-                          key: const ValueKey('break-primary-action'),
-                          label: _isRunning ? 'Timer Running' : 'Start Timer',
-                          semanticLabel: _isRunning
-                              ? 'Timer running'
-                              : 'Start break timer',
-                          icon: Icons.play_arrow_rounded,
-                          onPressed: _isRunning ? null : _startTimer,
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: _skipBreak,
-                          child: const Text('Skip this break'),
-                        ),
-                      ],
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               );

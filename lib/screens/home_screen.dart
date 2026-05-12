@@ -98,36 +98,57 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 670;
             final ringSize = compact ? 206.0 : 236.0;
+            const horizontalPadding = 20.0;
+            final availableWidth =
+                constraints.maxWidth - (horizontalPadding * 2);
+            final contentWidth = constraints.maxWidth >= 720
+                ? 560.0
+                : availableWidth.clamp(0.0, double.infinity);
 
             return SingleChildScrollView(
               physics: compact
                   ? const BouncingScrollPhysics()
                   : const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _Header(appState: widget.appState),
-                    SizedBox(height: compact ? 22 : 34),
-                    CountdownRing(
-                      progress: _progress,
-                      label: _timeRemaining,
-                      caption: 'until break',
-                      size: ringSize,
+              padding: const EdgeInsets.fromLTRB(
+                horizontalPadding,
+                20,
+                horizontalPadding,
+                24,
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: contentWidth,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    SizedBox(height: compact ? 18 : 24),
-                    _HomeSummary(appState: widget.appState),
-                    SizedBox(height: compact ? 18 : 28),
-                    GradientActionButton(
-                      key: const ValueKey('home-primary-action'),
-                      label: 'Take Break Now',
-                      semanticLabel: 'Take a break now',
-                      icon: Icons.play_arrow_rounded,
-                      onPressed: _openBreak,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _Header(appState: widget.appState),
+                        SizedBox(height: compact ? 22 : 34),
+                        CountdownRing(
+                          progress: _progress,
+                          label: _timeRemaining,
+                          caption: 'until break',
+                          size: ringSize,
+                        ),
+                        SizedBox(height: compact ? 18 : 24),
+                        _HomeSummary(appState: widget.appState),
+                        SizedBox(height: compact ? 18 : 28),
+                        SizedBox(
+                          width: double.infinity,
+                          child: GradientActionButton(
+                            key: const ValueKey('home-primary-action'),
+                            label: 'Take Break Now',
+                            semanticLabel: 'Take a break now',
+                            icon: Icons.play_arrow_rounded,
+                            onPressed: _openBreak,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -234,37 +255,40 @@ class _HomeSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ResetPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SummaryMetric(
-              value: appState.currentStreak.toString(),
-              label: 'day streak',
-              icon: Icons.local_fire_department_rounded,
-              color: ResetColors.warmAccent,
+    return SizedBox(
+      width: double.infinity,
+      child: ResetPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        child: Row(
+          children: [
+            Expanded(
+              child: _SummaryMetric(
+                value: appState.currentStreak.toString(),
+                label: 'day streak',
+                icon: Icons.local_fire_department_rounded,
+                color: ResetColors.warmAccent,
+              ),
             ),
-          ),
-          const _SummaryDivider(),
-          Expanded(
-            child: _SummaryMetric(
-              value: appState.breaksToday.toString(),
-              label: 'breaks today',
-              icon: Icons.wb_sunny_rounded,
-              color: ResetColors.primary,
+            const _SummaryDivider(),
+            Expanded(
+              child: _SummaryMetric(
+                value: appState.breaksToday.toString(),
+                label: 'breaks today',
+                icon: Icons.wb_sunny_rounded,
+                color: ResetColors.primary,
+              ),
             ),
-          ),
-          const _SummaryDivider(),
-          Expanded(
-            child: _SummaryMetric(
-              value: appState.totalMinutes.toString(),
-              label: 'mins moved',
-              icon: Icons.directions_walk_rounded,
-              color: ResetColors.accentBlue,
+            const _SummaryDivider(),
+            Expanded(
+              child: _SummaryMetric(
+                value: appState.totalMinutes.toString(),
+                label: 'mins moved',
+                icon: Icons.directions_walk_rounded,
+                color: ResetColors.accentBlue,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

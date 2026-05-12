@@ -18,10 +18,11 @@ class StatsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Stats')),
       body: DecoratedBox(
         decoration: ResetDecorations.screen(),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          children: [
-            Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 1000;
+            final maxContentWidth = wide ? 980.0 : 760.0;
+            final topCards = Row(
               children: [
                 Expanded(
                   child: StatCard(
@@ -43,14 +44,57 @@ class StatsScreen extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 18),
-            _StreakCard(streak: appState.currentStreak),
-            const SizedBox(height: 18),
-            _TotalCard(appState: appState),
-            const SizedBox(height: 18),
-            _ActivityChart(breakdown: appState.activityBreakdown),
-          ],
+            );
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: maxContentWidth,
+                    child: wide
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    topCards,
+                                    const SizedBox(height: 18),
+                                    _StreakCard(
+                                      streak: appState.currentStreak,
+                                    ),
+                                    const SizedBox(height: 18),
+                                    _TotalCard(appState: appState),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: _ActivityChart(
+                                  breakdown: appState.activityBreakdown,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              topCards,
+                              const SizedBox(height: 18),
+                              _StreakCard(streak: appState.currentStreak),
+                              const SizedBox(height: 18),
+                              _TotalCard(appState: appState),
+                              const SizedBox(height: 18),
+                              _ActivityChart(
+                                breakdown: appState.activityBreakdown,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -105,11 +149,13 @@ class _StreakCard extends StatelessWidget {
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Maintain 3+ breaks per day',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ResetColors.muted,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  'Maintain 3+ breaks per day',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: ResetColors.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
