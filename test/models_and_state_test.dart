@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:reset/models/activity_type.dart';
 import 'package:reset/models/break_log.dart';
+import 'package:reset/models/user_settings.dart';
 import 'package:reset/state/reset_app_state.dart';
 
 void main() {
@@ -22,6 +23,11 @@ void main() {
     );
 
     expect(BreakLog.fromJson(log.toJson()), log);
+  });
+
+  test('default focus time is fifty five minutes', () {
+    expect(const UserSettings().reminderIntervalMinutes, 55);
+    expect(UserSettings.fromJson(const {}).reminderIntervalMinutes, 55);
   });
 
   test('stats count completed breaks only', () {

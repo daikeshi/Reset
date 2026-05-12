@@ -1,6 +1,6 @@
 class UserSettings {
   const UserSettings({
-    this.reminderIntervalMinutes = 60,
+    this.reminderIntervalMinutes = defaultReminderIntervalMinutes,
     this.breakDurationMinutes = 5,
     this.quietHoursStart = '22:00',
     this.quietHoursEnd = '08:00',
@@ -15,6 +15,7 @@ class UserSettings {
   final bool notificationsEnabled;
   final bool soundEnabled;
 
+  static const defaultReminderIntervalMinutes = 55;
   static const minReminderIntervalMinutes = 30;
   static const maxReminderIntervalMinutes = 120;
   static const minBreakDurationMinutes = 1;
@@ -52,7 +53,9 @@ class UserSettings {
 
   factory UserSettings.fromJson(Map<String, Object?> json) {
     return UserSettings(
-      reminderIntervalMinutes: json['reminderIntervalMinutes'] as int? ?? 60,
+      reminderIntervalMinutes:
+          json['reminderIntervalMinutes'] as int? ??
+          defaultReminderIntervalMinutes,
       breakDurationMinutes: json['breakDurationMinutes'] as int? ?? 5,
       quietHoursStart: json['quietHoursStart'] as String? ?? '22:00',
       quietHoursEnd: json['quietHoursEnd'] as String? ?? '08:00',

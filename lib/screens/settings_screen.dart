@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/user_settings.dart';
@@ -121,6 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   maxValue: UserSettings.maxReminderIntervalMinutes,
                   decrementKey: const ValueKey('focus-time-decrement'),
                   incrementKey: const ValueKey('focus-time-increment'),
+                  inputKey: const ValueKey('focus-time-input'),
                   onChanged: _isSaving
                       ? null
                       : (value) => _runSettingUpdate(
@@ -135,6 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   maxValue: UserSettings.maxBreakDurationMinutes,
                   decrementKey: const ValueKey('break-duration-decrement'),
                   incrementKey: const ValueKey('break-duration-increment'),
+                  inputKey: const ValueKey('break-duration-input'),
                   onChanged: _isSaving
                       ? null
                       : (value) => _runSettingUpdate(
@@ -227,7 +230,7 @@ class _TileDivider extends StatelessWidget {
   }
 }
 
-class _MinuteStepperTile extends StatelessWidget {
+class _MinuteStepperTile extends StatefulWidget {
   const _MinuteStepperTile({
     required this.title,
     required this.value,
@@ -235,6 +238,7 @@ class _MinuteStepperTile extends StatelessWidget {
     required this.maxValue,
     required this.decrementKey,
     required this.incrementKey,
+    required this.inputKey,
     required this.onChanged,
   });
 
@@ -244,46 +248,123 @@ class _MinuteStepperTile extends StatelessWidget {
   final int maxValue;
   final Key decrementKey;
   final Key incrementKey;
+  final Key inputKey;
   final ValueChanged<int>? onChanged;
 
   @override
+  State<_MinuteStepperTile> createState() => _MinuteStepperTileState();
+}
+
+class _MinuteStepperTileState extends State<_MinuteStepperTile> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value.toString());
+    _focusNode = FocusNode()..addListener(_handleFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MinuteStepperTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value && !_focusNode.hasFocus) {
+      _controller.text = widget.value.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChanged);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChanged() {
+    if (!_focusNode.hasFocus) {
+      _commitTypedValue();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final canDecrement = onChanged != null && value > minValue;
-    final canIncrement = onChanged != null && value < maxValue;
+    final canDecrement =
+        widget.onChanged != null && widget.value > widget.minValue;
+    final canIncrement =
+        widget.onChanged != null && widget.value < widget.maxValue;
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(title),
+      title: Text(widget.title),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            key: decrementKey,
-            tooltip: 'Decrease $title',
+            key: widget.decrementKey,
+            tooltip: 'Decrease ${widget.title}',
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.remove_rounded),
-            onPressed: canDecrement ? () => onChanged!(value - 1) : null,
+            onPressed: canDecrement
+                ? () => widget.onChanged!(widget.value - 1)
+                : null,
           ),
           SizedBox(
             width: 62,
-            child: Text(
-              '$value min',
+            child: TextFormField(
+              key: widget.inputKey,
+              controller: _controller,
+              focusNode: _focusNode,
+              enabled: widget.onChanged != null,
               textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                isDense: true,
+                suffixText: 'min',
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: ResetColors.ink,
                 fontWeight: FontWeight.w800,
               ),
+              onFieldSubmitted: (_) => _commitTypedValue(),
+              onTapOutside: (event) {
+                FocusScope.of(context).unfocus();
+              },
             ),
           ),
           IconButton(
-            key: incrementKey,
-            tooltip: 'Increase $title',
+            key: widget.incrementKey,
+            tooltip: 'Increase ${widget.title}',
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.add_rounded),
-            onPressed: canIncrement ? () => onChanged!(value + 1) : null,
+            onPressed: canIncrement
+                ? () => widget.onChanged!(widget.value + 1)
+                : null,
           ),
         ],
       ),
     );
+  }
+
+  void _commitTypedValue() {
+    final parsed = int.tryParse(_controller.text);
+    if (parsed == null) {
+      _controller.text = widget.value.toString();
+      return;
+    }
+
+    final clamped = parsed.clamp(widget.minValue, widget.maxValue);
+    if (clamped == widget.value) {
+      _controller.text = widget.value.toString();
+      return;
+    }
+
+    _controller.text = clamped.toString();
+    widget.onChanged?.call(clamped);
   }
 }
